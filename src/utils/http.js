@@ -487,14 +487,14 @@ export const reqgoodsCount = ()=>{
 
 // 添加
 export const reqseckAdd=(user)=>{
-    let d = new FormData()
-    for(let i in user){
-        d.append(i,user[i])
-    }
+    // let d = new FormData()
+    // for(let i in user){
+    //     d.append(i,user[i])
+    // }
     return axios({
         url :baseUrl+"/api/seckadd",
         method:"post",
-        data:d
+        data:qs.stringify(user)
     })
 }
 // 列表 p={page:1,size:10}
@@ -527,14 +527,10 @@ export const reqseckDetail = (id)=>{
 }
 // 修改
 export const reqseckUpdate = (user)=>{
-    let d = new FormData()
-    for(let i in user){
-        d.append(i,user[i])
-    }
     return axios({
         url:baseUrl+"/api/seckedit",
         method:"post",
-        data:d
+        data:qs.stringify(user)
     })
 }
 

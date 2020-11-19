@@ -6,19 +6,21 @@
           <el-input v-model="user.title" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="活动期限" label-width="120px">
-        <el-time-picker
-        
-          is-range
-          arrow-control
-          v-model="value2"
-          range-separator="至"
-          start-placeholder="开始时间"
-          end-placeholder="结束时间"
-          placeholder="选择时间范围"
-        ></el-time-picker>
+          <div class="block">
+            <!-- <span class="demonstration">起始日期时刻为 12:00:00，结束日期时刻为 08:00:00</span> -->
+            <el-date-picker
+              v-model="value2"
+              type="datetimerange"
+              align="right"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              :default-time="['12:00:00', '08:00:00']"
+              value-format="timestamp"
+            ></el-date-picker>
+          </div>
         </el-form-item>
 
-          <el-form-item label="一级分类" label-width="120px" prop="first_cateid">
+        <el-form-item label="一级分类" label-width="120px" prop="first_cateid">
           <el-select placeholder="请选择一级分类" v-model="user.first_cateid" @change="changeFirst">
             <el-option
               v-for="item in cateList"
@@ -30,7 +32,7 @@
         </el-form-item>
 
         <el-form-item label="二级分类" label-width="120px" prop="second_cateid">
-          <el-select placeholder="请选择二级分类" v-model="user.second_cateid">
+          <el-select placeholder="请选择二级分类" v-model="user.second_cateid" @change="changeSecond">
             <el-option
               v-for="item in secondCateList"
               :key="item.id"
@@ -44,12 +46,11 @@
             <el-option
               v-for="item in goodsList"
               :key="item.id"
-              :label="item.catename"
+              :label="item.goodsname"
               :value="item.id"
             ></el-option>
           </el-select>
         </el-form-item>
-
 
         <el-form-item label="状态" label-width="120px">
           <el-switch v-model="user.status" :active-value="1" :inactive-value="2"></el-switch>
@@ -70,6 +71,8 @@ import {
   reqseckAdd,
   reqseckDetail,
   reqseckUpdate,
+  reqcateList,
+  reqgoodsList,
 } from "../../../utils/http";
 import { successAlert, errorAlert } from "../../../utils/alert";
 export default {
@@ -78,22 +81,22 @@ export default {
     return {
       user: {
         title: "",
-        begintime:"",
-        endtime:"",
-        first_cateid:"",
-        second_cateid:"",
-        goodsid:"",
-        status: 1
+        begintime: "",
+        endtime: "",
+        first_cateid: "",
+        second_cateid: "",
+        goodsid: "",
+        status: 1,
       },
       secondCateList: [],
       goodsList: [],
-      value2:""
+      value2: "",
     };
   },
   computed: {
     ...mapGetters({
       seckList: "seck/list",
-       //一级分类list
+      //一级分类list
       cateList: "cate/list",
     }),
   },
@@ -102,24 +105,24 @@ export default {
       reqList: "seck/reqList",
       // 请求一级分类list
       reqCateList: "cate/reqList",
+      reqSpecsList: "specs/reqList",
+      reqGoodsList: "goods/reqList",
+      reqseckList: "seck/reqList",
     }),
     changeFirst() {
-      //二级分类的id重置
-      this.user.second_cateid = "";
-      this.getSecondList();
-      
-    },
-    getSecondList() {
+      // this.user.second_cateid = "";
       //获取二级分类list
       reqcateList({ pid: this.user.first_cateid }).then((res) => {
-        console.log(res)
         this.secondCateList = res.data.list;
       });
     },
-    getgoodsList() {
+    changeSecond() {
       //获取二级分类list
-      reqgoodsList({ id: this.user.second_cateid }).then((res) => {
-        console.log(res)
+      reqgoodsList({
+        fid: this.user.first_cateid,
+        sid: this.user.second_cateid,
+      }).then((res) => {
+        console.log(res);
         this.goodsList = res.data.list;
       });
     },
@@ -129,18 +132,36 @@ export default {
     empty() {
       this.user = {
         title: "",
-        begintime:"",
-        endtime:"",
-        first_cateid:"",
-        second_cateid:"",
-        goodsid:"",
-        status: 1
+        begintime: "",
+        endtime: "",
+        first_cateid: "",
+        second_cateid: "",
+        goodsid: "",
+        status: 1,
       };
-       this.secondCateList= [],
-      this.goodsList=[],
-      this.value2=""
+      (this.secondCateList = []), (this.goodsList = []), (this.value2 = "");
+    },
+    check() {
+      return new Promise((resolve, reject) => {
+        //验证
+        if (this.user.first_cateid === "") {
+          errorAlert("一级分类不能为空");
+          return;
+        }
+        if (this.user.second_cateid === "") {
+          errorAlert("二级分类不能为空");
+          return;
+        }
+        if (this.user.goodsid === "") {
+          errorAlert("商品不能为空");
+          return;
+        }
+        resolve();
+      });
     },
     add() {
+      (this.user.begintime = this.value2[0]),
+        (this.user.endtime = this.value2[1]);
       reqseckAdd(this.user).then((res) => {
         if (res.data.code == 200) {
           successAlert("添加成功");
@@ -154,15 +175,24 @@ export default {
       reqseckDetail(id).then((res) => {
         this.user = res.data.list;
         this.user.id = id;
+        this.changeFirst();
+        this.changeSecond();
+        this.value2 = [
+          new Date(Number(res.data.list.begintime)),
+          new Date(Number(res.data.list.endtime)),
+        ];
       });
     },
     update() {
+      (this.user.begintime = this.value2[0]),
+        (this.user.endtime = this.value2[1]);
       reqseckUpdate(this.user).then((res) => {
         if (res.data.code == 200) {
           successAlert("修改成功");
           this.cancel();
           this.empty();
           this.reqList();
+          this.reqseckList();
         }
       });
     },
@@ -173,7 +203,7 @@ export default {
     },
   },
   mounted() {
-     // 5.一进来请求一级分类list
+    // 5.一进来请求一级分类list
     this.reqCateList();
   },
 };
