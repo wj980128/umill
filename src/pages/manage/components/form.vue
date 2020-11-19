@@ -38,7 +38,7 @@ import {
   reqUserDetail,
   reqUserUpdate,
 } from "../../../utils/http";
-import { successAlert } from "../../../utils/alert";
+import { successAlert,errorAlert} from "../../../utils/alert";
 export default {
   props: ["info"],
   data() {
@@ -67,31 +67,54 @@ export default {
         menus: "",
       };
     },
-    add() {
-      reqUserAdd(this.user).then((res) => {
-        if (res.data.code == 200) {
-          successAlert("添加成功");
-          this.cancel();
-          this.empty();
-          this.$emit("init");
+    //验证
+    check() {
+      return new Promise((resolve, reject) => {
+        //验证
+        if (this.user.roleid === "") {
+          errorAlert("所属角色不能为空");
+          return;
         }
+        if (this.user.username === "") {
+          errorAlert("用户名不能为空");
+          return;
+        }
+        if (this.user.password === "") {
+          errorAlert("密码不能为空");
+          return;
+        }
+        resolve();
+      });
+    },
+    add() {
+      this.check().then(() => {
+        reqUserAdd(this.user).then((res) => {
+          if (res.data.code == 200) {
+            successAlert("添加成功");
+            this.cancel();
+            this.empty();
+            this.$emit("init");
+          }
+        });
       });
     },
     getOne(uid) {
       reqUserDetail(uid).then((res) => {
         this.user = res.data.list;
-         this.user.password = ""
+        this.user.password = "";
         // this.user.uid = uid;
       });
     },
     update() {
-      reqUserUpdate(this.user).then((res) => {
-        if (res.data.code == 200) {
-          successAlert("修改成功");
-          this.cancel();
-          this.empty();
-          this.$emit("init");
-        }
+      this.check().then(() => {
+        reqUserUpdate(this.user).then((res) => {
+          if (res.data.code == 200) {
+            successAlert("修改成功");
+            this.cancel();
+            this.empty();
+            this.$emit("init");
+          }
+        });
       });
     },
     closed() {

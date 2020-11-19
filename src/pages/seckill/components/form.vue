@@ -1,7 +1,7 @@
 <template>
   <div class="add">
     <el-dialog :title="info.title" :visible.sync="info.isshow" @closed="closed">
-      <el-form :model="user">
+      <el-form :model="user" :rules="rules">
         <el-form-item label="活动名称" label-width="120px">
           <el-input v-model="user.title" autocomplete="off"></el-input>
         </el-form-item>
@@ -79,6 +79,16 @@ export default {
   props: ["info"],
   data() {
     return {
+      rules: {
+        title: [{ required: true, message: "请输入商品名称", trigger: "blur" }],
+        first_cateid: [
+          { required: true, message: "请选择一级分类", trigger: "change" },
+        ],
+        second_cateid: [
+          { required: true, message: "请选择二级分类", trigger: "change" },
+        ],
+        goodsid: [{ required: true, message: "请选择商品", trigger: "change" }],
+      },
       user: {
         title: "",
         begintime: "",
@@ -143,15 +153,23 @@ export default {
     },
     check() {
       return new Promise((resolve, reject) => {
-        //验证
+        if (this.user.title === "") {
+          errorAlert("活动名称不能为空");
+          return;
+        }
+        if (this.value2.length === 0) {
+          errorAlert("请选择时间");
+          return;
+        }
         if (this.user.first_cateid === "") {
-          errorAlert("一级分类不能为空");
+          errorAlert("请选择一级分类");
           return;
         }
         if (this.user.second_cateid === "") {
-          errorAlert("二级分类不能为空");
+          errorAlert("请选择二级分类");
           return;
         }
+
         if (this.user.goodsid === "") {
           errorAlert("商品不能为空");
           return;
@@ -160,15 +178,17 @@ export default {
       });
     },
     add() {
-      (this.user.begintime = this.value2[0]),
-        (this.user.endtime = this.value2[1]);
-      reqseckAdd(this.user).then((res) => {
-        if (res.data.code == 200) {
-          successAlert("添加成功");
-          this.cancel();
-          this.empty();
-          this.reqList();
-        }
+      this.check().then(() => {
+        (this.user.begintime = this.value2[0]),
+          (this.user.endtime = this.value2[1]);
+        reqseckAdd(this.user).then((res) => {
+          if (res.data.code == 200) {
+            successAlert("添加成功");
+            this.cancel();
+            this.empty();
+            this.reqList();
+          }
+        });
       });
     },
     getOne(id) {
@@ -184,7 +204,8 @@ export default {
       });
     },
     update() {
-      (this.user.begintime = this.value2[0]),
+      this.check().then(()=>{
+         (this.user.begintime = this.value2[0]),
         (this.user.endtime = this.value2[1]);
       reqseckUpdate(this.user).then((res) => {
         if (res.data.code == 200) {
@@ -195,6 +216,8 @@ export default {
           this.reqseckList();
         }
       });
+      })
+      
     },
     closed() {
       if (this.info.title === "活动修改") {

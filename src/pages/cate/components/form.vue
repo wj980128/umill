@@ -94,8 +94,30 @@ export default {
       };
       this.imgUrl = "";
     },
+      //验证
+    check() {
+      return new Promise((resolve, reject) => {
+        //验证
+        if (this.user.pid === "") {
+          errorAlert("上级分类不能为空");
+          return;
+        }
+        if (this.user.catename === "") {
+          errorAlert("分类名称不能为空");
+          return;
+        }
+        if (this.imgUrl == null && this.user.pid !== 0) {
+          errorAlert("图片为空");
+          return;
+        }
+        resolve();
+        
+      });
+      
+    },
     add() {
-      reqcateAdd(this.user).then(res => {
+      this.check().then(()=>{
+        reqcateAdd(this.user).then(res => {
         if (res.data.code == 200) {
      
           successAlert("添加成功");
@@ -104,6 +126,8 @@ export default {
           this.reqList()
         }
       });
+      })
+      
     },
     getOne(id) {
       reqcateDetail(id).then((res) => {
@@ -113,7 +137,8 @@ export default {
       });
     },
     update() {
-      reqcateUpdate(this.user).then((res) => {
+      this.check().then(()=>{
+reqcateUpdate(this.user).then((res) => {
         if (res.data.code == 200) {
           successAlert("修改成功");
           this.cancel();
@@ -121,6 +146,8 @@ export default {
           this.reqList();
         }
       });
+      })
+      
     },
     changeFile(e) {
       // 判断文件大小

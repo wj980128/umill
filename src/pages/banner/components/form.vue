@@ -9,9 +9,9 @@
           <!-- 1.原生js上传图片 -->
           <!-- 1.绘制html +css  -->
           <!-- 如果添加成功，此时，input上的文件应该清掉，所以直接将input节点清除 -->
-          <div class="myupload" >
+          <div class="myupload">
             <h3>+</h3>
-            <img class="img" v-if="imgUrl" :src="imgUrl" alt >
+            <img class="img" v-if="imgUrl" :src="imgUrl" alt />
 
             <input v-if="info.isshow" type="file" class="ipt" @change="changeFile" />
           </div>
@@ -57,17 +57,17 @@ export default {
         status: 1,
         img: null,
       },
-      imgUrl:""
+      imgUrl: null,
     };
   },
   computed: {
     ...mapGetters({
-      bannerList:"banner/list"
+      bannerList: "banner/list",
     }),
   },
   methods: {
     ...mapActions({
-      reqList:"banner/reqList"
+      reqList: "banner/reqList",
     }),
     cancel() {
       this.info.isshow = false;
@@ -80,32 +80,51 @@ export default {
       };
       this.imgUrl = "";
     },
-    add() {
-      reqbannerAdd(this.user).then(res => {
-        if (res.data.code == 200) {
-     
-          successAlert("添加成功");
-          this.cancel();
-          this.empty();
-          this.reqList()
+    //验证
+    check() {
+      return new Promise((resolve, reject) => {
+        //验证
+        if (this.user.title === "") {
+          errorAlert("标题不能为空");
+          return;
         }
+        if (this.imgUrl === null) {
+          errorAlert("图片不能为空");
+          return;
+        }
+
+        resolve();
+      });
+    },
+    add() {
+      this.check().then(() => {
+        reqbannerAdd(this.user).then((res) => {
+          if (res.data.code == 200) {
+            successAlert("添加成功");
+            this.cancel();
+            this.empty();
+            this.reqList();
+          }
+        });
       });
     },
     getOne(id) {
       reqbannerDetail(id).then((res) => {
         this.user = res.data.list;
-        this.imgUrl = this.$imgPre +this.user.img;
+        this.imgUrl = this.$imgPre + this.user.img;
         this.user.id = id;
       });
     },
     update() {
-      reqbannerUpdate(this.user).then((res) => {
-        if (res.data.code == 200) {
-          successAlert("修改成功");
-          this.cancel();
-          this.empty();
-          this.reqList();
-        }
+      this.check().then(() => {
+        reqbannerUpdate(this.user).then((res) => {
+          if (res.data.code == 200) {
+            successAlert("修改成功");
+            this.cancel();
+            this.empty();
+            this.reqList();
+          }
+        });
       });
     },
     changeFile(e) {
