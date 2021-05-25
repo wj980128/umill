@@ -49,4 +49,4 @@ ok
 ok
 
 ### 全部完成
-ok ok ok
+ok ok ok OK OK OK
